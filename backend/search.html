@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Search Breaches</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .search-wrap {
+      display: flex; gap: 10px; margin-bottom: 28px;
+    }
+    .search-input {
+      flex: 1; background: #1e1e2e; border: 1px solid #333;
+      border-radius: 8px; padding: 12px 16px; color: #fff;
+      font-size: 15px;
+    }
+    .search-input:focus { outline: none; border-color: #dc143c; }
+    .result-card {
+      background: #12121a; border: 1px solid #222;
+      border-radius: 10px; padding: 20px; margin-bottom: 14px;
+      cursor: pointer; transition: border-color 0.2s;
+    }
+    .result-card:hover { border-color: #dc143c; }
+    .result-card.active { border-color: #dc143c; }
+    .company-name { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 10px; }
+    .detail-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 12px; margin-bottom: 12px;
+    }
+    .detail-item .label { font-size: 11px; color: #666; margin-bottom: 3px; }
+    .detail-item .value { font-size: 14px; color: #ccc; font-weight: 500; }
+    .records-big { font-size: 22px; font-weight: 700; color: #dc143c; }
+    .no-results { color: #666; font-size: 14px; text-align: center; padding: 40px; }
+
+    /* Comment section */
+    .comment-section { margin-top: 20px; border-top: 1px solid #222; padding-top: 16px; }
+    .comment-section h3 { font-size: 14px; color: #888; margin-bottom: 14px; }
+    .comment-form { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .comment-form input, .comment-form textarea {
+      background: #1e1e2e; border: 1px solid #333; border-radius: 8px;
+      padding: 10px 12px; color: #fff; font-size: 13px; font-family: inherit;
+    }
+    .comment-form textarea { resize: vertical; min-height: 70px; }
+    .comment-form input:focus, .comment-form textarea:focus {
+      outline: none; border-color: #dc143c;
+    }
+    .comment-btn {
+      background: #dc143c; color: white; border: none;
+      padding: 9px 20px; border-radius: 8px; cursor: pointer;
+      font-size: 13px; font-weight: 600; align-self: flex-end;
+    }
+    .comment-btn:hover { background: #b01030; }
+    .comment-item {
+      background: #0e0e1a; border-radius: 8px;
+      padding: 12px 14px; margin-bottom: 8px;
+    }
+    .comment-header {
+      display: flex; justify-content: space-between;
+      margin-bottom: 5px;
+    }
+    .comment-user { font-size: 13px; font-weight: 600; color: #dc143c; }
+    .comment-time { font-size: 11px; color: #555; }
+    .comment-text { font-size: 13px; color: #aaa; line-height: 1.5; }
+    .no-comments { font-size: 13px; color: #555; padding: 10px 0; }
+    .severity-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+    }
+    .badge-large { background: #2a0a0a; color: #ff6b6b; border: 1px solid #dc143c; }
+    .badge-small { background: #0a2a0a; color: #66ff88; border: 1px solid #22cc44; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="logo">🔐 Dark Web Analytics</span>
+  <a href="index.html">Overview</a>
+  <a href="trends.html">Trends</a>
+  <a href="predict.html">Predict Severity</a>
+  <a href="search.html" class="active">Search</a>
+  <a href="compare.html">⚖️ Compare</a>
+  <a href="leaderboard.html">🏆 Leaderboard</a>
+</nav>
+
+<div class="container">
+  <h1>Search Breach Database</h1>
+  <p class="subtitle">Search any company to see full breach history and details</p>
+
+  <div class="search-wrap">
+    <input
+      class="search-input"
+      id="search-input"
+      type="text"
+      placeholder="Search company name... (e.g. Adobe, Yahoo, LinkedIn)"
+      oninput="handleSearch()"
+    >
+  </div>
+
+  <div id="result-count" style="font-size:13px;color:#666;margin-bottom:16px;"></div>
+  <div id="results"></div>
+</div>
+
+<script>
+const API = "http://localhost:8000";
+let searchTimeout;
+let activeCompany = null;
+
+async function handleSearch() {
+  const query = document.getElementById("search-input").value.trim();
+  
+  if (query.length < 2) {
+    document.getElementById("results").innerHTML = "";
+    document.getElementById("result-count").textContent = "";
+    return;
+  }
+
+  // Debounce — wait 300ms after user stops typing before searching
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => fetchResults(query), 300);
+}
+
+async function fetchResults(query) {
+  document.getElementById("results").innerHTML =
+    `<div class="no-results">Searching...</div>`;
+
+  const res  = await fetch(`${API}/search?company=${encodeURIComponent(query)}`);
+  const data = await res.json();
+
+  if (!data.results || data.results.length === 0) {
+    document.getElementById("result-count").textContent = "";
+    document.getElementById("results").innerHTML =
+      `<div class="no-results">No breaches found for "${query}"</div>`;
+    return;
+  }
+
+  document.getElementById("result-count").textContent =
+    `Found ${data.total} breach${data.total > 1 ? "es" : ""}`;
+
+  document.getElementById("results").innerHTML = data.results.map((b, i) => `
+    <div class="result-card" id="card-${i}" onclick="toggleCard(${i}, '${b.Entity.replace(/'/g, "\\'")}')">
+      <div class="company-name">
+        🏢 ${b.Entity}
+        <span class="severity-badge ${b.Records > 1000000 ? 'badge-large' : 'badge-small'}">
+          ${b.Records > 1000000 ? 'LARGE' : 'SMALL'}
+        </span>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <div class="label">Year</div>
+          <div class="value">${b.Year}</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Industry</div>
+          <div class="value">${b.Industry}</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Attack Method</div>
+          <div class="value">${b.Method}</div>
+        </div>
+      </div>
+      <div class="label">Records Leaked</div>
+      <div class="records-big">${Number(b.Records).toLocaleString()}</div>
+
+      <!-- Comment section — hidden until card is clicked -->
+      <div class="comment-section" id="comments-${i}" style="display:none">
+        <h3>💬 Community Notes</h3>
+        <div class="comment-form">
+          <input type="text" id="username-${i}" placeholder="Your name">
+          <textarea id="comment-${i}" placeholder="Add a note about this breach..."></textarea>
+          <button class="comment-btn" onclick="submitComment(event, ${i}, '${b.Entity.replace(/'/g, "\\'")}')">
+            Post Note
+          </button>
+        </div>
+        <div id="comment-list-${i}"></div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function toggleCard(i, company) {
+  const commentsDiv = document.getElementById(`comments-${i}`);
+  const card        = document.getElementById(`card-${i}`);
+  const isOpen      = commentsDiv.style.display !== "none";
+
+  if (isOpen) {
+    commentsDiv.style.display = "none";
+    card.classList.remove("active");
+  } else {
+    commentsDiv.style.display = "block";
+    card.classList.add("active");
+    loadComments(i, company);
+  }
+}
+
+async function loadComments(i, company) {
+  const res  = await fetch(`${API}/comments?company=${encodeURIComponent(company)}`);
+  const data = await res.json();
+  const list = document.getElementById(`comment-list-${i}`);
+
+  if (data.comments.length === 0) {
+    list.innerHTML = `<p class="no-comments">No notes yet — be the first!</p>`;
+    return;
+  }
+
+  list.innerHTML = data.comments.map(c => `
+    <div class="comment-item">
+      <div class="comment-header">
+        <span class="comment-user">👤 ${c.username}</span>
+        <span class="comment-time">${c.time}</span>
+      </div>
+      <div class="comment-text">${c.text}</div>
+    </div>
+  `).join("");
+}
+
+async function submitComment(event, i, company) {
+  event.stopPropagation(); // prevent card toggle
+
+  const username = document.getElementById(`username-${i}`).value.trim();
+  const text     = document.getElementById(`comment-${i}`).value.trim();
+
+  if (!username || !text) {
+    alert("Please enter your name and a comment!");
+    return;
+  }
+
+  await fetch(`${API}/comments`, {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify({ company, username, text })
+  });
+
+  // Clear inputs
+  document.getElementById(`username-${i}`).value = "";
+  document.getElementById(`comment-${i}`).value  = "";
+
+  // Reload comments
+  loadComments(i, company);
+}
+</script>
+</body>
+</html>

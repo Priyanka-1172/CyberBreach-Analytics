@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Trends</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav>
+  <span class="logo">🔐 CyberBreach Analytics</span>
+  <a href="index.html">Overview</a>
+  <a href="trends.html" class="active">Trends</a>
+  <a href="predict.html">Predict Severity</a>
+  <a href="search.html">🔍 Search</a>
+  <a href="compare.html">⚖️ Compare</a>
+  <a href="leaderboard.html">🏆 Breach Ranking</a>
+</nav>
+
+<div class="container">
+  <h1>Breach Trends Over Time</h1>
+  <p class="subtitle">How data breaches have evolved from 2004 to 2021</p>
+
+  <div class="card">
+    <h2>Breaches Per Year</h2>
+    <div class="bar-chart" id="yearly_chart"></div>
+  </div>
+
+  <div class="card">
+    <h2>Total Records Leaked Per Industry</h2>
+    <div class="bar-chart" id="records_chart"></div>
+  </div>
+</div>
+
+<script>
+const API = "http://localhost:8000";
+
+async function loadTrends() {
+  const res  = await fetch(`${API}/trends`);
+  const data = await res.json();
+
+  // Yearly breaches chart
+  const yearly = data.yearly_counts;
+  const maxY   = Math.max(...Object.values(yearly));
+  document.getElementById("yearly_chart").innerHTML =
+    Object.entries(yearly).map(([year, count]) => `
+      <div class="bar-row">
+        <span class="bar-label">${year}</span>
+        <div class="bar-wrap">
+          <div class="bar-fill" style="width:${count/maxY*100}%">${count}</div>
+        </div>
+      </div>
+    `).join("");
+
+  // Records per industry chart
+  const records = data.records_by_industry;
+  const maxR    = Math.max(...Object.values(records));
+  document.getElementById("records_chart").innerHTML =
+    Object.entries(records).map(([ind, val]) => `
+      <div class="bar-row">
+        <span class="bar-label">${ind}</span>
+        <div class="bar-wrap">
+          <div class="bar-fill" style="width:${val/maxR*100}%">
+            ${(val/1e6).toFixed(0)}M
+          </div>
+        </div>
+      </div>
+    `).join("");
+}
+
+loadTrends();
+</script>
+</body>
+</html>

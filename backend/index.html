@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CyberBreach Analytics</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav>
+  <span class="logo">🔐 CyberBreach Analytics</span>
+  <a href="index.html">Overview</a>
+  <a href="trends.html">Trends</a>
+  <a href="predict.html">Predict Severity</a>
+  <a href="search.html">🔍 Search</a>
+  <a href="compare.html">⚖️ Compare</a>
+  <a href="leaderboard.html">🏆 Breach Ranking</a>
+</nav>
+
+<div class="container">
+Breach Analytics Dashboard</h1>
+  <p class="subtitle">Analyzing data breaches from 2004–2021</p>
+
+  <div class="metrics">
+    <div class="metric-card">
+      <div class="label">Total Breaches</div>
+      <div class="value" id="total_breaches">...</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Total Records Leaked</div>
+      <div class="value" id="total_records">...</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Most Breached Industry</div>
+      <div class="value" id="most_breached">...</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Top Attack Method</div>
+      <div class="value" id="top_method">...</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Most Breached Industries</h2>
+    <div class="bar-chart" id="industry_chart"></div>
+  </div>
+
+  <div class="card">
+    <h2>Most Common Attack Methods</h2>
+    <div class="bar-chart" id="method_chart"></div>
+  </div>
+</div>
+
+<script>
+const API = "http://localhost:8000";
+
+async function loadOverview() {
+  const res  = await fetch(`${API}/overview`);
+  const data = await res.json();
+
+  document.getElementById("total_breaches").textContent = data.total_breaches;
+  document.getElementById("total_records").textContent  = data.total_records;
+  document.getElementById("most_breached").textContent  = data.most_breached;
+  document.getElementById("top_method").textContent     = data.top_attack_method;
+
+  renderBars("industry_chart", data.industry_counts);
+  renderBars("method_chart",   data.method_counts);
+}
+
+function renderBars(containerId, counts) {
+  const container = document.getElementById(containerId);
+  const max = Math.max(...Object.values(counts));
+  container.innerHTML = Object.entries(counts).map(([label, count]) => `
+    <div class="bar-row">
+      <span class="bar-label">${label}</span>
+      <div class="bar-wrap">
+        <div class="bar-fill" style="width:${(count/max*100)}%">${count}</div>
+      </div>
+    </div>
+  `).join("");
+}
+
+loadOverview();
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Predict Severity</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav>
+  <span class="logo">🔐 CyberBreach Analytics</span>
+  <a href="index.html">Overview</a>
+  <a href="trends.html">Trends</a>
+  <a href="predict.html" class="active">Predict Severity</a>
+  <a href="search.html">🔍 Search</a>
+  <a href="compare.html">⚖️ Compare</a>
+  <a href="leaderboard.html">🏆 Breach Ranking</a>
+</nav>
+
+<div class="container">
+  <h1>Predict Breach Severity</h1>
+  <p class="subtitle">Enter organisation details to predict if a breach will be Large or Small</p>
+
+  <div class="card">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Industry</label>
+        <select id="industry"></select>
+      </div>
+      <div class="form-group">
+        <label>Attack Method</label>
+        <select id="method"></select>
+      </div>
+      <div class="form-group">
+        <label>Year</label>
+        <input type="number" id="year" value="2023" min="2004" max="2025">
+      </div>
+    </div>
+
+    <button class="btn" onclick="predict()">🔮 Predict Now</button>
+    <div class="loading" id="loading">Analysing...</div>
+
+    <div class="result-box" id="result"></div>
+  </div>
+</div>
+
+<script>
+const API = "http://localhost:8000";
+
+async function loadOptions() {
+  const res  = await fetch(`${API}/trends`);
+  const data = await res.json();
+
+  const indSel = document.getElementById("industry");
+  const metSel = document.getElementById("method");
+
+  data.industries.forEach(i => {
+    indSel.innerHTML += `<option>${i}</option>`;
+  });
+  data.methods.forEach(m => {
+    metSel.innerHTML += `<option>${m}</option>`;
+  });
+}
+
+async function predict() {
+  const industry = document.getElementById("industry").value;
+  const method   = document.getElementById("method").value;
+  const year     = parseInt(document.getElementById("year").value);
+
+  document.getElementById("loading").style.display = "block";
+  document.getElementById("result").style.display  = "none";
+
+  const res  = await fetch(`${API}/predict`, {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify({ industry, method, year })
+  });
+  const data = await res.json();
+
+  document.getElementById("loading").style.display = "none";
+
+  const box = document.getElementById("result");
+  box.style.display = "block";
+
+  if (data.severity === "Large") {
+    box.className = "result-box result-large";
+    box.innerHTML = `🚨 LARGE BREACH predicted — ${data.confidence}% confidence<br>
+      <span style="font-size:13px;opacity:0.8;font-weight:400">
+        ${industry} industry | ${method} | Year ${year}
+      </span>`;
+  } else {
+    box.className = "result-box result-small";
+    box.innerHTML = `✅ SMALL BREACH predicted — ${data.confidence}% confidence<br>
+      <span style="font-size:13px;opacity:0.8;font-weight:400">
+        ${industry} industry | ${method} | Year ${year}
+      </span>`;
+  }
+}
+
+loadOptions();
+</script>
+</body>
+</html>

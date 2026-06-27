@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Compare Industries</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .compare-selectors {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+    .vs-badge {
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: #dc143c;
+      background: #1e1e2e;
+      border: 1px solid #333;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .industry-card {
+      background: #12121a;
+      border: 2px solid #222;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .industry-card.left  { border-color: #dc143c; }
+    .industry-card.right { border-color: #4488ff; }
+    .industry-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .left  .industry-title { color: #dc143c; }
+    .right .industry-title { color: #4488ff; }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #1a1a2a;
+      font-size: 13px;
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { color: #666; }
+    .stat-value { color: #fff; font-weight: 500; }
+    .stat-value.highlight { color: #dc143c; font-size: 16px; font-weight: 700; }
+    .winner-badge {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      margin-left: 6px;
+      font-weight: 600;
+    }
+    .badge-red  { background: #2a0a0a; color: #ff6b6b; }
+    .badge-blue { background: #0a1a2a; color: #88bbff; }
+    .compare-btn {
+      background: #dc143c;
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 24px;
+    }
+    .compare-btn:hover { background: #b01030; }
+    .insight-box {
+      background: #12121a;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+    .insight-box h3 {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .insight-item {
+      font-size: 13px;
+      color: #ccc;
+      padding: 6px 0;
+      border-bottom: 1px solid #1a1a2a;
+      line-height: 1.6;
+    }
+    .insight-item:last-child { border-bottom: none; }
+    .bar-compare-row {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .bcr-label {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+    .bcr-bars { display: flex; flex-direction: column; gap: 6px; }
+    .bcr-bar-row { display: flex; align-items: center; gap: 10px; }
+    .bcr-name { font-size: 12px; width: 90px; text-align: right; color: #aaa; }
+    .bcr-wrap { flex: 1; background: #1e1e2e; border-radius: 4px; height: 22px; overflow: hidden; }
+    .bcr-fill {
+      height: 100%;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      padding-left: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: white;
+      min-width: 30px;
+      transition: width 1s ease;
+    }
+    .fill-red  { background: linear-gradient(90deg, #dc143c, #ff4466); }
+    .fill-blue { background: linear-gradient(90deg, #1144cc, #4488ff); }
+    select {
+      width: 100%;
+      background: #1e1e2e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #fff;
+      font-size: 14px;
+    }
+    select:focus { outline: none; border-color: #dc143c; }
+    label { font-size: 12px; color: #888; display: block; margin-bottom: 6px; }
+    .loading { text-align: center; color: #666; padding: 40px; display: none; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="logo">🔐 CyberBreach Analytics</span>
+  <a href="index.html">Overview</a>
+  <a href="trends.html">Trends</a>
+  <a href="predict.html">Predict Severity</a>
+  <a href="search.html">🔍 Search</a>
+  <a href="compare.html" class="active">⚖️ Compare</a>
+  <a href="leaderboard.html">🏆 Leaderboard</a>
+</nav>
+
+<div class="container">
+  <h1>Compare Industries</h1>
+  <p class="subtitle">Select two industries to see a detailed side-by-side breach analysis</p>
+
+  <div class="compare-selectors">
+    <div>
+      <label>Industry 1</label>
+      <select id="ind1"></select>
+    </div>
+    <div class="vs-badge">VS</div>
+    <div>
+      <label>Industry 2</label>
+      <select id="ind2"></select>
+    </div>
+  </div>
+
+  <button class="compare-btn" onclick="compare()">⚖️ Compare Now</button>
+  <div class="loading" id="loading">Analyzing...</div>
+  <div id="compare-result"></div>
+</div>
+
+<script>
+const API = "http://localhost:8000";
+
+async function loadIndustries() {
+  const res  = await fetch(`${API}/compare`);
+  const data = await res.json();
+
+  const sel1 = document.getElementById("ind1");
+  const sel2 = document.getElementById("ind2");
+
+  data.industries_available.forEach((ind, i) => {
+    sel1.innerHTML += `<option>${ind}</option>`;
+    sel2.innerHTML += `<option ${i === 1 ? "selected" : ""}>${ind}</option>`;
+  });
+}
+
+async function compare() {
+  const ind1 = document.getElementById("ind1").value;
+  const ind2 = document.getElementById("ind2").value;
+
+  if (ind1 === ind2) {
+    alert("Please select two different industries!");
+    return;
+  }
+
+  document.getElementById("loading").style.display = "block";
+  document.getElementById("compare-result").innerHTML = "";
+
+  const res  = await fetch(`${API}/compare?industry1=${ind1}&industry2=${ind2}`);
+  const data = await res.json();
+
+  document.getElementById("loading").style.display = "none";
+
+  const s1 = data.industry1;
+  const s2 = data.industry2;
+
+  // Generate insights automatically
+  const insights = [];
+  if (s1.total_breaches > s2.total_breaches)
+    insights.push(`🔴 <b>${s1.industry}</b> is breached more frequently — ${s1.total_breaches} vs ${s2.total_breaches} incidents`);
+  else
+    insights.push(`🔵 <b>${s2.industry}</b> is breached more frequently — ${s2.total_breaches} vs ${s1.total_breaches} incidents`);
+
+  if (s1.avg_records > s2.avg_records)
+    insights.push(`🔴 <b>${s1.industry}</b> loses more records per breach on average — ${s1.avg_records.toLocaleString()} vs ${s2.avg_records.toLocaleString()}`);
+  else
+    insights.push(`🔵 <b>${s2.industry}</b> loses more records per breach on average — ${s2.avg_records.toLocaleString()} vs ${s1.avg_records.toLocaleString()}`);
+
+  if (s1.large_breaches > s2.large_breaches)
+    insights.push(`🔴 <b>${s1.industry}</b> has more large breaches (>1M records) — ${s1.large_breaches} vs ${s2.large_breaches}`);
+  else
+    insights.push(`🔵 <b>${s2.industry}</b> has more large breaches (>1M records) — ${s2.large_breaches} vs ${s1.large_breaches}`);
+
+  insights.push(`🔴 <b>${s1.industry}</b> worst year: ${s1.worst_year} | 🔵 <b>${s2.industry}</b> worst year: ${s2.worst_year}`);
+  insights.push(`Top attack on ${s1.industry}: <b>${s1.top_method}</b> | Top attack on ${s2.industry}: <b>${s2.top_method}</b>`);
+
+  // Bar comparison data
+  const maxRecords = Math.max(s1.total_records, s2.total_records);
+  const maxBreaches = Math.max(s1.total_breaches, s2.total_breaches);
+
+  document.getElementById("compare-result").innerHTML = `
+    <!-- Side by side stats -->
+    <div class="compare-grid">
+      ${renderCard(s1, "left", "🔴", s2)}
+      ${renderCard(s2, "right", "🔵", s1)}
+    </div>
+
+    <!-- Bar comparisons -->
+    <div class="insight-box">
+      <h3>📊 Visual Comparison</h3>
+      <div class="bar-compare-row">
+
+        <div>
+          <div class="bcr-label">Total Breaches</div>
+          <div class="bcr-bars">
+            <div class="bcr-bar-row">
+              <span class="bcr-name">${s1.industry}</span>
+              <div class="bcr-wrap">
+                <div class="bcr-fill fill-red" style="width:${s1.total_breaches/maxBreaches*100}%">
+                  ${s1.total_breaches}
+                </div>
+              </div>
+            </div>
+            <div class="bcr-bar-row">
+              <span class="bcr-name">${s2.industry}</span>
+              <div class="bcr-wrap">
+                <div class="bcr-fill fill-blue" style="width:${s2.total_breaches/maxBreaches*100}%">
+                  ${s2.total_breaches}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="bcr-label">Total Records Leaked</div>
+          <div class="bcr-bars">
+            <div class="bcr-bar-row">
+              <span class="bcr-name">${s1.industry}</span>
+              <div class="bcr-wrap">
+                <div class="bcr-fill fill-red" style="width:${s1.total_records/maxRecords*100}%">
+                  ${(s1.total_records/1e6).toFixed(0)}M
+                </div>
+              </div>
+            </div>
+            <div class="bcr-bar-row">
+              <span class="bcr-name">${s2.industry}</span>
+              <div class="bcr-wrap">
+                <div class="bcr-fill fill-blue" style="width:${s2.total_records/maxRecords*100}%">
+                  ${(s2.total_records/1e6).toFixed(0)}M
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Auto insights -->
+    <div class="insight-box">
+      <h3>💡 Key Insights</h3>
+      ${insights.map(i => `<div class="insight-item">→ ${i}</div>`).join("")}
+    </div>
+  `;
+}
+
+function renderCard(s, side, emoji, other) {
+  const colorClass = side === "left" ? "badge-red" : "badge-blue";
+  const moreBreaches = s.total_breaches > other.total_breaches;
+  const moreRecords  = s.total_records  > other.total_records;
+
+  return `
+    <div class="industry-card ${side}">
+      <div class="industry-title">${emoji} ${s.industry}</div>
+      <div class="stat-row">
+        <span class="stat-label">Total Breaches</span>
+        <span class="stat-value ${moreBreaches ? "highlight" : ""}">
+          ${s.total_breaches}
+          ${moreBreaches ? `<span class="winner-badge ${colorClass}">MORE</span>` : ""}
+        </span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Total Records Leaked</span>
+        <span class="stat-value ${moreRecords ? "highlight" : ""}">
+          ${(s.total_records/1e6).toFixed(0)}M
+          ${moreRecords ? `<span class="winner-badge ${colorClass}">MORE</span>` : ""}
+        </span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Avg Records Per Breach</span>
+        <span class="stat-value">${s.avg_records.toLocaleString()}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Largest Single Breach</span>
+        <span class="stat-value">${s.largest_breach}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Worst Year</span>
+        <span class="stat-value">${s.worst_year}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Top Attack Method</span>
+        <span class="stat-value">${s.top_method}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Large Breaches (>1M)</span>
+        <span class="stat-value">${s.large_breaches}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Small Breaches</span>
+        <span class="stat-value">${s.small_breaches}</span>
+      </div>
+    </div>
+  `;
+}
+
+loadIndustries();
+</script>
+</body>
+</html>
