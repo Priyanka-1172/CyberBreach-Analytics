@@ -9,12 +9,12 @@
 
 <nav>
   <span class="logo">🔐 CyberBreach Analytics</span>
-  <a href="index.html">Overview</a>
-  <a href="trends.html">Trends</a>
-  <a href="predict.html">Predict Severity</a>
-  <a href="search.html">🔍 Search</a>
-  <a href="compare.html">⚖️ Compare</a>
-  <a href="leaderboard.html">🏆 Breach Ranking</a>
+  <a href="index.html"class="active">Overview</a>
+  <a href="trends.html"class="active">Trends</a>
+  <a href="predict.html"class="active">Predict Severity</a>
+  <a href="search.html"class="active">🔍 Search</a>
+  <a href="compare.html"class="active">⚖️ Compare</a>
+  <a href="leaderboard.html"class="active">🏆 Breach Ranking</a>
 </nav>
 
 <div class="container">
@@ -52,7 +52,7 @@ Breach Analytics Dashboard</h1>
 </div>
 
 <script>
-const API = "http://localhost:8000";
+const API = "https://cyberbreach-analytics.onrender.com";
 
 async function loadOverview() {
   const res  = await fetch(`${API}/overview`);
