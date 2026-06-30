@@ -17,9 +17,9 @@ app.add_middleware(
 )
 
 # ── Load data and model once at startup ───────────────
-BASE = r"C:\Users\admin\Desktop\dark web Analytics project"
-df    = pd.read_csv(f"{BASE}\\clean_breaches.csv")
-model = joblib.load(f"{BASE}\\model.pkl")
+BASE = os.path.dirname(os.path.abspath(__file__))
+df    = pd.read_csv(os.path.join(BASE, "..", "clean_breaches.csv"))
+model = joblib.load(os.path.join(BASE, "..", "model.pkl"))
 
 # Fix year column
 df["Year"] = df["Year"].astype(str).str[:4]
